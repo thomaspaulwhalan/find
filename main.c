@@ -7,7 +7,7 @@
 
 #include<nerror.h>
 
-int search_word_in_dir(char *search_word, char *path);
+int search_word_in_dir(char *search_word, char *path, int cwd_size);
 
 int main(int argc, char **argv)
 {
@@ -26,12 +26,17 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
-	search_word_in_dir(argv[1], ".");
+	char cwd[PATH_MAX];
+	getcwd(cwd, sizeof(cwd));
+	FAIL_IF_R_M(cwd == NULL, 1, stderr, "Error getting cwd()\n");
+	int cwd_size = strlen(cwd);
+	
+	search_word_in_dir(argv[1], ".", cwd_size);
 
 	return 0;
 }
 
-int search_word_in_dir(char *search_word, char *path)
+int search_word_in_dir(char *search_word, char *path, int cwd_size)
 {
 	DIR *current_dir;
 	struct dirent *dir_reader;
@@ -43,23 +48,59 @@ int search_word_in_dir(char *search_word, char *path)
 	int chdir_test;
 	chdir_test = chdir(path);
 	FAIL_IF_R_M(chdir_test != 0, 1, stderr, "Error changing path");
+
+	char cwd[PATH_MAX];
+	getcwd(cwd, sizeof(cwd));
+	FAIL_IF_R_M(cwd == NULL, 1, stderr, "Error getting cwd()\n");
 	
-	printf("Directory of %s:\n", path);
+	int search_size = strlen(search_word);
+
+	for (int counter = cwd_size; counter != strlen(cwd); counter++) {
+		if (cwd[counter] == search_word[0]) {
+			for (int i = 0; i <= search_size ; i++) {
+				if (cwd[counter+i] == search_word[i]) {
+					if (i == search_size - 1) {
+						printf("%s\n", cwd);
+					}
+				}
+				else if (cwd[counter+i] == '\0') {
+					break;
+				}
+			}
+		}
+	}
 
 	while ((dir_reader = readdir(current_dir)) != NULL) {
 		stat(dir_reader->d_name, &stat_buffer);
 		if (S_ISDIR(stat_buffer.st_mode)) {
 			if ((strcmp(".", dir_reader->d_name) != 0) && (strcmp("..", dir_reader->d_name) != 0)) {
-				search_word_in_dir(search_word, dir_reader->d_name);
+				search_word_in_dir(search_word, dir_reader->d_name, cwd_size);
 			}
 		}
 		else {
-			printf("%s <FILE>\n", dir_reader->d_name);
+			for (int counter = 0; counter <= strlen(dir_reader->d_name); counter++) {
+				if (dir_reader->d_name[counter] == search_word[0]) {
+					for (int i = 0; i <= search_size; i++) {
+						if (dir_reader->d_name[counter+i] == search_word[i]) {
+							if (i == search_size - 1) {
+								getcwd(cwd, sizeof(cwd));
+								strcat(cwd, "/");
+								strcat(cwd, dir_reader->d_name);
+								printf("%s <FILE>\n", cwd);
+							}
+						}
+						else if (dir_reader->d_name[counter+i] == '\0') {
+							break;
+						}
+						else {
+							break;
+						}
+					}
+				}
+			}
 		}
 	}
 	
-	fputc('\n', stdout);
-
 	chdir_test = chdir("..");
 	FAIL_IF_R_M(chdir_test != 0, 1, stderr, "Error changing path");
 
