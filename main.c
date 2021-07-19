@@ -14,7 +14,7 @@ int search_word_in_dir(char *search_word, char *path);
 int main(int argc, char **argv)
 {
 	if (argc <= 1) {
-		fprintf(stderr, "find: missing arguments\nTRY:\n\tfind --help\n");
+		fprintf(stderr, "findf: missing arguments\nTRY:\n\tfind --help\n");
 		return 1;
 	}
 	else if (argc == 2) {
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 		}
 	}
 	else if (argc >= 3) {
-		fprintf(stderr, "find: too many arguments\nTRY:\n\tfind --help\n");
+		fprintf(stderr, "findf: too many arguments\nTRY:\n\tfind --help\n");
 		return 1;
 	}
 	
