@@ -4,7 +4,7 @@ CFLAGS=-I . -Wall --pedantic
 
 all: findf
 
-find: main.c
+findf: main.c
 	$(CC) $(CFLAGS) main.c -o findf
 
 clean:
