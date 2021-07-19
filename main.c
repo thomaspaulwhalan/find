@@ -7,7 +7,7 @@
 
 #include<nerror.h>
 
-int search_word_in_dir(char *search_word, char *path, int cwd_size);
+int search_word_in_dir(char *search_word, char *path);
 
 int main(int argc, char **argv)
 {
@@ -25,18 +25,13 @@ int main(int argc, char **argv)
 		fprintf(stderr, "find: too many arguments\nTRY:\n\tfind --help\n");
 		return 1;
 	}
-
-	char cwd[PATH_MAX];
-	getcwd(cwd, sizeof(cwd));
-	FAIL_IF_R_M(cwd == NULL, 1, stderr, "Error getting cwd()\n");
-	int cwd_size = strlen(cwd);
 	
-	search_word_in_dir(argv[1], ".", cwd_size);
+	search_word_in_dir(argv[1], ".");
 
 	return 0;
 }
 
-int search_word_in_dir(char *search_word, char *path, int cwd_size)
+int search_word_in_dir(char *search_word, char *path)
 {
 	DIR *current_dir;
 	struct dirent *dir_reader;
@@ -55,15 +50,15 @@ int search_word_in_dir(char *search_word, char *path, int cwd_size)
 	
 	int search_size = strlen(search_word);
 
-	for (int counter = cwd_size; counter != strlen(cwd); counter++) {
-		if (cwd[counter] == search_word[0]) {
+	for (int counter = 0; counter != strlen(path); counter++) {
+		if (path[counter] == search_word[0]) {
 			for (int i = 0; i <= search_size ; i++) {
-				if (cwd[counter+i] == search_word[i]) {
+				if (path[counter+i] == search_word[i]) {
 					if (i == search_size - 1) {
 						printf("%s\n", cwd);
 					}
 				}
-				else if (cwd[counter+i] == '\0') {
+				else if (path[counter+i] == '\0') {
 					break;
 				}
 			}
@@ -74,7 +69,7 @@ int search_word_in_dir(char *search_word, char *path, int cwd_size)
 		stat(dir_reader->d_name, &stat_buffer);
 		if (S_ISDIR(stat_buffer.st_mode)) {
 			if ((strcmp(".", dir_reader->d_name) != 0) && (strcmp("..", dir_reader->d_name) != 0)) {
-				search_word_in_dir(search_word, dir_reader->d_name, cwd_size);
+				search_word_in_dir(search_word, dir_reader->d_name);
 			}
 		}
 		else {
