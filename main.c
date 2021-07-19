@@ -7,6 +7,8 @@
 
 #include<nerror.h>
 
+int result_count = 0;
+
 int search_word_in_dir(char *search_word, char *path);
 
 int main(int argc, char **argv)
@@ -28,6 +30,8 @@ int main(int argc, char **argv)
 	
 	search_word_in_dir(argv[1], ".");
 
+	printf("\n%d results returned\n", result_count);
+
 	return 0;
 }
 
@@ -38,15 +42,15 @@ int search_word_in_dir(char *search_word, char *path)
 	struct stat stat_buffer;
 
 	current_dir = opendir(path);
-	FAIL_IF_R_M(current_dir == NULL, 1, stderr, "Error opening file\n");
+	FAIL_IF_R(current_dir == NULL, 1);
 
 	int chdir_test;
 	chdir_test = chdir(path);
-	FAIL_IF_R_M(chdir_test != 0, 1, stderr, "Error changing path");
+	FAIL_IF_R(chdir_test != 0, 1);
 
 	char cwd[PATH_MAX];
 	getcwd(cwd, sizeof(cwd));
-	FAIL_IF_R_M(cwd == NULL, 1, stderr, "Error getting cwd()\n");
+	FAIL_IF_R(cwd == NULL, 1);
 	
 	int search_size = strlen(search_word);
 
@@ -56,9 +60,13 @@ int search_word_in_dir(char *search_word, char *path)
 				if (path[counter+i] == search_word[i]) {
 					if (i == search_size - 1) {
 						printf("%s\n", cwd);
+						result_count++;
 					}
 				}
 				else if (path[counter+i] == '\0') {
+					break;
+				}
+				else {
 					break;
 				}
 			}
@@ -66,7 +74,7 @@ int search_word_in_dir(char *search_word, char *path)
 	}
 
 	while ((dir_reader = readdir(current_dir)) != NULL) {
-		stat(dir_reader->d_name, &stat_buffer);
+		lstat(dir_reader->d_name, &stat_buffer);
 		if (S_ISDIR(stat_buffer.st_mode)) {
 			if ((strcmp(".", dir_reader->d_name) != 0) && (strcmp("..", dir_reader->d_name) != 0)) {
 				search_word_in_dir(search_word, dir_reader->d_name);
@@ -82,6 +90,7 @@ int search_word_in_dir(char *search_word, char *path)
 								strcat(cwd, "/");
 								strcat(cwd, dir_reader->d_name);
 								printf("%s <FILE>\n", cwd);
+								result_count++;
 							}
 						}
 						else if (dir_reader->d_name[counter+i] == '\0') {
@@ -97,7 +106,7 @@ int search_word_in_dir(char *search_word, char *path)
 	}
 	
 	chdir_test = chdir("..");
-	FAIL_IF_R_M(chdir_test != 0, 1, stderr, "Error changing path");
+	FAIL_IF_R(chdir_test != 0, 1);
 
 	closedir(current_dir);
 
